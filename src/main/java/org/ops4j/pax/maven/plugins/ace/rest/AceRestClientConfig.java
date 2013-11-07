@@ -18,9 +18,11 @@
 
 package org.ops4j.pax.maven.plugins.ace.rest;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.KeyStore;
 
 /**
  * @author dpishchukhin
@@ -31,6 +33,10 @@ public class AceRestClientConfig {
     private String password;
     private String obrPath;
     private String clientPath;
+    private KeyStore keyStore;
+    private String privateKeyPassword;
+    private KeyStore trustStore;
+    private URL proxy;
 
     public URI getServerUri() {
         return serverUri;
@@ -50,6 +56,22 @@ public class AceRestClientConfig {
 
     public String getClientPath() {
         return clientPath;
+    }
+
+    public KeyStore getKeyStore() {
+        return keyStore;
+    }
+
+    public String getPrivateKeyPassword() {
+        return privateKeyPassword;
+    }
+
+    public KeyStore getTrustStore() {
+        return trustStore;
+    }
+
+    public URL getProxy() {
+        return proxy;
     }
 
     public AceRestClientConfig setServerUri(URI serverUri) {
@@ -80,5 +102,43 @@ public class AceRestClientConfig {
     public AceRestClientConfig setClientPath(String clientPath) {
         this.clientPath = clientPath;
         return this;
+    }
+
+    public AceRestClientConfig setProxy(URL proxy) {
+        this.proxy = proxy;
+        return this;
+    }
+
+    public AceRestClientConfig setKeyStore(File keyStore, String password, String privateKeyPassword) {
+        if (keyStore != null) {
+            this.keyStore = loadKeyStore(keyStore, password);
+        }
+        this.privateKeyPassword = privateKeyPassword;
+        return this;
+    }
+
+    public AceRestClientConfig setTrustStore(File trustStore, String password) {
+        if (trustStore != null) {
+            this.trustStore = loadKeyStore(trustStore, password);
+        }
+        return this;
+    }
+
+    private KeyStore loadKeyStore(File keyStoreFile, String password) {
+        try {
+            KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
+            java.io.FileInputStream fis = null;
+            try {
+                fis = new java.io.FileInputStream(keyStoreFile);
+                store.load(fis, password.toCharArray());
+            } finally {
+                if (fis != null) {
+                    fis.close();
+                }
+            }
+            return store;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to load KeyStore", e);
+        }
     }
 }

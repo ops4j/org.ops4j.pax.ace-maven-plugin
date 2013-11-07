@@ -18,6 +18,9 @@
 
 package org.ops4j.pax.maven.plugins.ace.rest;
 
+import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnector;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
@@ -37,6 +40,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -528,14 +532,36 @@ public class AceRestClient {
         return id;
     }
 
-    private Client createClient() {
-        Client client = ClientBuilder.newClient(
-                new ClientConfig()
-                        .property(ClientProperties.FOLLOW_REDIRECTS, false)
-        );
-        if (this.config.getUsername() != null) {
-            client.register(new HttpBasicAuthFilter(this.config.getUsername(), this.config.getPassword()));
-        }
-        return client;
+    private Client createClient() throws URISyntaxException {
+        return createClientBuilder().build();
     }
+
+    private ClientBuilder createClientBuilder() throws URISyntaxException {
+        ClientBuilder builder = ClientBuilder.newBuilder();
+        ClientConfig clientConfig = new ClientConfig();
+        builder.property(ClientProperties.FOLLOW_REDIRECTS, false);
+
+        if (config.getUsername() != null) {
+            clientConfig.register(new HttpBasicAuthFilter(config.getUsername(), config.getPassword()));
+        }
+
+        SslConfigurator sslConfigurator = SslConfigurator.newInstance(false);
+        if (config.getKeyStore() != null && config.getPrivateKeyPassword() != null) {
+            sslConfigurator.keyStore(config.getKeyStore());
+            sslConfigurator.keyStorePassword(config.getPrivateKeyPassword());
+        }
+        if (config.getTrustStore() != null) {
+            sslConfigurator.trustStore(config.getTrustStore());
+        }
+        clientConfig.property(ApacheClientProperties.SSL_CONFIG, sslConfigurator);
+
+        if (config.getProxy() != null) {
+            clientConfig.property(ApacheClientProperties.PROXY_URI, config.getProxy().toURI());
+        }
+        clientConfig.connector(new ApacheConnector(clientConfig));
+        builder.withConfig(clientConfig);
+
+        return builder;
+    }
+
 }

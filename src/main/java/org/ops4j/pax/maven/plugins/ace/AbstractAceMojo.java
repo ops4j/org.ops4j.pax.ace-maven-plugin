@@ -25,6 +25,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.ops4j.pax.maven.plugins.ace.rest.AceRestClient;
 import org.ops4j.pax.maven.plugins.ace.rest.AceRestClientConfig;
 
+import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -51,6 +52,42 @@ public abstract class AbstractAceMojo extends AbstractMojo {
      */
     @Parameter(property = "ace.server.password", required = false)
     private String password;
+
+    /**
+     * ACE keystore for SSL connection
+     */
+    @Parameter(property = "ace.server.keystore", required = false)
+    private File keystore;
+
+    /**
+     * ACE keystore password for SSL connection
+     */
+    @Parameter(property = "ace.server.keystore.password", required = false)
+    private String keystorePassword;
+
+    /**
+     * ACE keystore private key password for SSL connection
+     */
+    @Parameter(property = "ace.server.keystore.private.key.password", required = false)
+    private String keystorePrivateKeyPassword;
+
+    /**
+     * ACE truststore for SSL connection
+     */
+    @Parameter(property = "ace.server.truststore", required = false)
+    private File truststore;
+
+    /**
+     * ACE truststore password for SSL connection
+     */
+    @Parameter(property = "ace.server.truststore.password", required = false)
+    private String truststorePassword;
+
+    /**
+     * ACE proxy
+     */
+    @Parameter(property = "ace.server.proxy", required = false)
+    private URL proxy;
 
     /**
      * ACE server REST service path (Default: client/work)
@@ -82,6 +119,9 @@ public abstract class AbstractAceMojo extends AbstractMojo {
                 .setServerUrl(serverUrl)
                 .setUsername(username)
                 .setPassword(password)
+                .setKeyStore(keystore, keystorePassword, keystorePrivateKeyPassword)
+                .setTrustStore(truststore, truststorePassword)
+                .setProxy(proxy)
                 .setClientPath(clientPath)
                 .setObrPath(obrPath));
     }
