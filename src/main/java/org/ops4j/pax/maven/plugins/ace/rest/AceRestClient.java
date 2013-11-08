@@ -480,7 +480,7 @@ public class AceRestClient {
             if (list != null) {
                 for (String id : list) {
                     T entry = loadEntry(id, context, entryClass);
-                    if (filter == null || filter.match(entry.getAttributes())) {
+                    if (entry != null && (filter == null || filter.match(entry.getAttributes()))) {
                         result.add(entry);
                     }
                 }
@@ -495,7 +495,9 @@ public class AceRestClient {
                 .path(context + "/" + id)
                 .request()
                 .get();
-        if (response.getStatus() != 200) {
+        if (response.getStatus() == 404) {
+            return null;
+        } else if (response.getStatus() != 200) {
             throw createRestException(response);
         }
         if (response.hasEntity()) {
